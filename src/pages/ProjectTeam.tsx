@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useProjects } from "@/context/ProjectContext";
@@ -91,8 +90,8 @@ const ProjectTeam: React.FC = () => {
     
     // Initialize stats for owner if available
     if (owner) {
-      tasksByUser[owner.id] = [];
-      statsByUser[owner.id] = {
+      tasksByUser[owner.username] = [];
+      statsByUser[owner.username] = {
         assignedTasks: 0,
         completedTasks: 0,
         totalStoryPoints: 0,
@@ -100,10 +99,10 @@ const ProjectTeam: React.FC = () => {
       };
     }
     
-    // Initialize stats for all collaborators
+    // Initialize stats for all collaborators using username instead of userId
     collaborators.forEach(collab => {
-      tasksByUser[collab.userId] = [];
-      statsByUser[collab.userId] = {
+      tasksByUser[collab.username] = [];
+      statsByUser[collab.username] = {
         assignedTasks: 0,
         completedTasks: 0,
         totalStoryPoints: 0,
@@ -111,7 +110,7 @@ const ProjectTeam: React.FC = () => {
       };
     });
     
-    // Process all tasks
+    // Process all tasks - Use usernames for keys instead of IDs
     projectTasks.forEach(task => {
       if (!task.assignedTo) return;
       
@@ -211,11 +210,11 @@ const ProjectTeam: React.FC = () => {
     );
   };
   
-  const renderUserStats = (userId: string) => {
-    const stats = userStats[userId];
+  const renderUserStats = (username: string) => {
+    const stats = userStats[username];
     
     if (!stats) {
-      console.log(`No stats available for user ${userId}`);
+      console.log(`No stats available for user ${username}`);
       return null;
     }
     
@@ -237,7 +236,7 @@ const ProjectTeam: React.FC = () => {
             <span>Points: {stats.completedStoryPoints} / {stats.totalStoryPoints}</span>
           </div>
         </div>
-        {renderTaskDropdown(userId)}
+        {renderTaskDropdown(username)}
       </div>
     );
   };
@@ -265,7 +264,7 @@ const ProjectTeam: React.FC = () => {
                 <div className="text-xs px-2 py-1 rounded-full inline-block bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 mt-1">
                   Owner
                 </div>
-                {renderUserStats(owner.id)}
+                {renderUserStats(owner.username)}
               </div>
             </div>
           ) : (
@@ -295,7 +294,7 @@ const ProjectTeam: React.FC = () => {
                        collab.role === 'product_owner' ? 'Product Owner' : 
                        'Team Member'}
                     </div>
-                    {renderUserStats(collab.userId)}
+                    {renderUserStats(collab.username)}
                   </div>
                 </div>
               ))}
