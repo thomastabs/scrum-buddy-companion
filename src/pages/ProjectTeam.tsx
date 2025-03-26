@@ -51,7 +51,7 @@ const ProjectTeam: React.FC = () => {
           setOwner({
             id: project.ownerId,
             username: project.ownerName,
-            email: undefined
+            email: project.ownerEmail
           });
         }
       } catch (error) {
@@ -182,13 +182,13 @@ const ProjectTeam: React.FC = () => {
   const getRoleBadgeClass = (role: string) => {
     switch(role) {
       case 'scrum_master':
-        return "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400";
+        return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
       case 'product_owner':
-        return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400";
+        return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
       case 'team_member':
-        return "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400";
+        return "bg-violet-100 text-violet-700 dark:bg-purple-900/30 dark:text-purple-400";
       default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-800/40 dark:text-gray-400";
+        return "bg-gray-100 text-gray-700 dark:bg-gray-800/40 dark:text-gray-400";
     }
   };
   
@@ -268,12 +268,12 @@ const ProjectTeam: React.FC = () => {
     
     return (
       <div className="space-y-2">
-        <div className="grid grid-cols-2 gap-2">
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+          <div className="flex items-center gap-1">
             <Clock className="h-3 w-3" />
             <span>Active: {stats.assignedTasks}</span>
           </div>
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <div className="flex items-center gap-1">
             <CheckCircle className="h-3 w-3" />
             <span>Completed: {stats.completedTasks}</span>
           </div>
@@ -311,14 +311,14 @@ const ProjectTeam: React.FC = () => {
             <Card className="bg-gradient-to-r from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/20 border-amber-200 dark:border-amber-800/30 overflow-hidden shadow-sm">
               <CardContent className="p-0">
                 <div className="flex flex-col md:flex-row">
-                  <div className="p-6 flex flex-col items-center justify-center bg-amber-100/50 dark:bg-amber-900/10 min-w-[150px]">
-                    <Avatar className="h-16 w-16 bg-amber-200 dark:bg-amber-700 text-amber-700 dark:text-amber-200 mb-2">
+                  <div className="p-6 flex flex-col items-center justify-center bg-amber-50/80 dark:bg-amber-900/10 min-w-[150px]">
+                    <Avatar className="h-16 w-16 bg-amber-100 dark:bg-amber-700 text-amber-700 dark:text-amber-200 mb-2">
                       <AvatarFallback className="text-xl">
                         {owner.username.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <h4 className="font-semibold text-center">{owner.username}</h4>
-                    <Badge className="mt-2 bg-amber-200 text-amber-800 dark:bg-amber-800 dark:text-amber-200 hover:bg-amber-300 dark:hover:bg-amber-700">
+                    <Badge className="mt-2 bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-800 dark:text-amber-200 dark:hover:bg-amber-700">
                       Owner
                     </Badge>
                   </div>
@@ -358,63 +358,70 @@ const ProjectTeam: React.FC = () => {
               {collaborators.map(collab => {
                 // Determine background gradient based on role
                 let cardStyle = "";
+                let sidebarStyle = "";
+                
                 if (collab.role === 'scrum_master') {
                   cardStyle = "bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200 dark:border-blue-800/30";
+                  sidebarStyle = "bg-blue-50/80 dark:bg-blue-900/10";
                 } else if (collab.role === 'product_owner') {
                   cardStyle = "bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border-green-200 dark:border-green-800/30";
+                  sidebarStyle = "bg-green-50/80 dark:bg-green-900/10";
                 } else {
-                  cardStyle = "bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border-purple-200 dark:border-purple-800/30";
+                  cardStyle = "bg-gradient-to-r from-violet-50 to-violet-100 dark:from-purple-900/20 dark:to-purple-800/20 border-violet-200 dark:border-purple-800/30";
+                  sidebarStyle = "bg-violet-50/80 dark:bg-purple-900/10";
                 }
                 
                 // Determine avatar color based on role
                 let avatarStyle = "";
                 if (collab.role === 'scrum_master') {
-                  avatarStyle = "bg-blue-200 dark:bg-blue-700 text-blue-700 dark:text-blue-200";
+                  avatarStyle = "bg-blue-100 dark:bg-blue-700 text-blue-700 dark:text-blue-200";
                 } else if (collab.role === 'product_owner') {
-                  avatarStyle = "bg-green-200 dark:bg-green-700 text-green-700 dark:text-green-200";
+                  avatarStyle = "bg-green-100 dark:bg-green-700 text-green-700 dark:text-green-200";
                 } else {
-                  avatarStyle = "bg-purple-200 dark:bg-purple-700 text-purple-700 dark:text-purple-200";
+                  avatarStyle = "bg-violet-100 dark:bg-purple-700 text-violet-700 dark:text-purple-200";
                 }
                 
                 return (
                   <Card key={collab.id} className={`${cardStyle} overflow-hidden shadow-sm hover:shadow-md transition-shadow`}>
                     <CardContent className="p-0">
-                      <div className="p-4 flex items-center gap-3 border-b border-border/50">
-                        <Avatar className={`h-12 w-12 ${avatarStyle}`}>
-                          <AvatarFallback className="text-lg">
-                            {collab.username.charAt(0).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        
-                        <div className="flex-1 overflow-hidden">
-                          <h4 className="font-semibold truncate">{collab.username}</h4>
-                          <div className="flex items-center flex-wrap gap-2">
-                            <Badge className={`text-xs ${getRoleBadgeClass(collab.role)}`}>
-                              {collab.role === 'scrum_master' ? 'Scrum Master' : 
-                               collab.role === 'product_owner' ? 'Product Owner' : 
-                               'Team Member'}
-                            </Badge>
+                      <div className="flex flex-col">
+                        <div className={`p-4 flex items-center gap-3 border-b border-border/50 ${sidebarStyle}`}>
+                          <Avatar className={`h-12 w-12 ${avatarStyle}`}>
+                            <AvatarFallback className="text-lg">
+                              {collab.username.charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          
+                          <div className="flex-1 overflow-hidden">
+                            <h4 className="font-semibold truncate">{collab.username}</h4>
+                            <div className="flex items-center flex-wrap gap-2">
+                              <Badge className={`text-xs ${getRoleBadgeClass(collab.role)}`}>
+                                {collab.role === 'scrum_master' ? 'Scrum Master' : 
+                                 collab.role === 'product_owner' ? 'Product Owner' : 
+                                 'Team Member'}
+                              </Badge>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      
-                      <div className="p-4 space-y-3">
-                        {collab.email && (
+                        
+                        <div className="p-4 space-y-3">
+                          {collab.email && (
+                            <div className="text-xs text-muted-foreground flex items-center gap-1">
+                              <Mail className="h-3 w-3" />
+                              <span>{collab.email}</span>
+                            </div>
+                          )}
+                          
                           <div className="text-xs text-muted-foreground flex items-center gap-1">
-                            <Mail className="h-3 w-3" />
-                            <span>{collab.email}</span>
+                            <User className="h-3 w-3" />
+                            <span>Joined: {formatJoinDate(collab.createdAt)}</span>
                           </div>
-                        )}
-                        
-                        <div className="text-xs text-muted-foreground flex items-center gap-1">
-                          <User className="h-3 w-3" />
-                          <span>Joined: {formatJoinDate(collab.createdAt)}</span>
+                          
+                          <Separator className="my-2" />
+                          
+                          {renderUserStats(collab.username)}
+                          {renderSprintContributions(collab.username)}
                         </div>
-                        
-                        <Separator className="my-2" />
-                        
-                        {renderUserStats(collab.username)}
-                        {renderSprintContributions(collab.username)}
                       </div>
                     </CardContent>
                   </Card>
@@ -431,3 +438,4 @@ const ProjectTeam: React.FC = () => {
 };
 
 export default ProjectTeam;
+
