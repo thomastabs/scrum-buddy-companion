@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useProjects } from "@/context/ProjectContext";
@@ -64,7 +63,6 @@ const ProjectTeam: React.FC = () => {
     loadCollaborators();
   }, [projectId, project]);
   
-  // Load task statistics when tasks and collaborators are available
   useEffect(() => {
     if (!projectId) return;
     
@@ -73,11 +71,9 @@ const ProjectTeam: React.FC = () => {
     console.log("Available collaborators:", collaborators.length);
     console.log("Owner:", owner);
     
-    // Get all sprints for this project
     const projectSprints = getSprintsByProject(projectId);
     console.log("Project sprints:", projectSprints.length);
     
-    // Get all tasks for this project - both sprint tasks and backlog tasks
     const projectTasks = tasks.filter(task => {
       const isInSprint = projectSprints.some(sprint => sprint.id === task.sprintId);
       const isProjectBacklog = task.projectId === projectId && !task.sprintId;
@@ -86,7 +82,6 @@ const ProjectTeam: React.FC = () => {
     
     console.log("Project tasks:", projectTasks.length);
     
-    // Create a mapping of user IDs to their assigned tasks
     const tasksByUser: Record<string, Task[]> = {};
     const statsByUser: Record<string, {
       assignedTasks: number,
@@ -96,7 +91,6 @@ const ProjectTeam: React.FC = () => {
     }> = {};
     const sprintsByUser: Record<string, string[]> = {};
     
-    // Initialize stats for owner if available
     if (owner) {
       tasksByUser[owner.username] = [];
       statsByUser[owner.username] = {
@@ -108,7 +102,6 @@ const ProjectTeam: React.FC = () => {
       sprintsByUser[owner.username] = [];
     }
     
-    // Initialize stats for all collaborators using username instead of userId
     collaborators.forEach(collab => {
       tasksByUser[collab.username] = [];
       statsByUser[collab.username] = {
@@ -120,13 +113,11 @@ const ProjectTeam: React.FC = () => {
       sprintsByUser[collab.username] = [];
     });
     
-    // Process all tasks - Use usernames for keys instead of IDs
     projectTasks.forEach(task => {
       if (!task.assignedTo) return;
       
       console.log(`Processing task ${task.id} assigned to ${task.assignedTo}`);
       
-      // Check if this user exists in our mapping
       if (!tasksByUser[task.assignedTo]) {
         console.log(`Creating new entry for user ${task.assignedTo}`);
         tasksByUser[task.assignedTo] = [];
@@ -139,14 +130,11 @@ const ProjectTeam: React.FC = () => {
         sprintsByUser[task.assignedTo] = [];
       }
       
-      // Add task to user's task list
       tasksByUser[task.assignedTo].push(task);
       
-      // Update stats
       const storyPoints = task.storyPoints || 0;
       statsByUser[task.assignedTo].totalStoryPoints += storyPoints;
       
-      // Track which sprints this user contributed to
       if (task.sprintId) {
         const sprint = projectSprints.find(s => s.id === task.sprintId);
         if (sprint && !sprintsByUser[task.assignedTo].includes(sprint.title)) {
@@ -300,7 +288,6 @@ const ProjectTeam: React.FC = () => {
       <h2 className="text-2xl font-bold mb-6">Team</h2>
       
       <div className="space-y-6">
-        {/* Project Owner Card */}
         <div className="scrum-card p-6">
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <Shield className="h-5 w-5 text-amber-500" />
@@ -346,7 +333,6 @@ const ProjectTeam: React.FC = () => {
           )}
         </div>
         
-        {/* Team Members Cards */}
         <div className="scrum-card p-6">
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <Users className="h-5 w-5 text-indigo-500" />
@@ -356,7 +342,6 @@ const ProjectTeam: React.FC = () => {
           {collaborators.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {collaborators.map(collab => {
-                // Determine background gradient based on role
                 let cardStyle = "";
                 let sidebarStyle = "";
                 
@@ -371,7 +356,6 @@ const ProjectTeam: React.FC = () => {
                   sidebarStyle = "bg-violet-50/80 dark:bg-purple-900/10";
                 }
                 
-                // Determine avatar color based on role
                 let avatarStyle = "";
                 if (collab.role === 'scrum_master') {
                   avatarStyle = "bg-blue-100 dark:bg-blue-700 text-blue-700 dark:text-blue-200";
@@ -438,4 +422,3 @@ const ProjectTeam: React.FC = () => {
 };
 
 export default ProjectTeam;
-
