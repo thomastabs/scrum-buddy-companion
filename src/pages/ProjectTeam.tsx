@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useProjects } from "@/context/ProjectContext";
@@ -185,7 +186,7 @@ const ProjectTeam: React.FC = () => {
     
     if (userTaskList.length === 0) {
       return (
-        <div className="text-xs text-muted-foreground">
+        <div className="text-sm text-muted-foreground">
           No tasks assigned
         </div>
       );
@@ -193,9 +194,9 @@ const ProjectTeam: React.FC = () => {
     
     return (
       <DropdownMenu>
-        <DropdownMenuTrigger className="text-xs flex items-center gap-1 hover:text-primary transition-colors">
+        <DropdownMenuTrigger className="text-sm flex items-center gap-1 hover:text-primary transition-colors">
           <span>View {userTaskList.length} task{userTaskList.length !== 1 ? 's' : ''}</span>
-          <ChevronDown className="h-3 w-3" />
+          <ChevronDown className="h-4 w-4" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-64 max-h-64 overflow-auto">
           {userTaskList.map(task => (
@@ -224,7 +225,7 @@ const ProjectTeam: React.FC = () => {
     
     if (contributions.length === 0) {
       return (
-        <div className="text-xs text-muted-foreground">
+        <div className="text-sm text-muted-foreground">
           No sprint contributions yet
         </div>
       );
@@ -232,8 +233,8 @@ const ProjectTeam: React.FC = () => {
     
     return (
       <div>
-        <div className="text-xs font-medium text-muted-foreground flex items-center gap-1">
-          <Calendar className="h-3 w-3" />
+        <div className="text-sm text-muted-foreground flex items-center gap-1">
+          <Calendar className="h-4 w-4" />
           <span>Sprint Contributions:</span>
         </div>
         <div className="flex flex-wrap gap-1 mt-1">
@@ -256,18 +257,18 @@ const ProjectTeam: React.FC = () => {
     
     return (
       <div className="space-y-2">
-        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+        <div className="flex items-center gap-3 text-sm text-muted-foreground">
           <div className="flex items-center gap-1">
-            <Clock className="h-3 w-3" />
+            <Clock className="h-4 w-4" />
             <span>Active: {stats.assignedTasks}</span>
           </div>
           <div className="flex items-center gap-1">
-            <CheckCircle className="h-3 w-3" />
+            <CheckCircle className="h-4 w-4" />
             <span>Completed: {stats.completedTasks}</span>
           </div>
         </div>
-        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-          <Star className="h-3 w-3" />
+        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+          <Star className="h-4 w-4" />
           <span>Points: {stats.completedStoryPoints} / {stats.totalStoryPoints}</span>
         </div>
         {renderTaskDropdown(username)}
@@ -312,7 +313,7 @@ const ProjectTeam: React.FC = () => {
                   
                   <div className="flex-1 p-6">
                     {owner.email && (
-                      <div className="text-sm text-muted-foreground flex items-center gap-1 mb-3">
+                      <div className="text-sm flex items-center gap-1 mb-3">
                         <Mail className="h-4 w-4" />
                         <span>{owner.email}</span>
                       </div>
@@ -396,8 +397,8 @@ const ProjectTeam: React.FC = () => {
                             </div>
                           )}
                           
-                          <div className="text-xs text-muted-foreground flex items-center gap-1">
-                            <User className="h-3 w-3" />
+                          <div className="text-sm text-muted-foreground flex items-center gap-1">
+                            <User className="h-4 w-4" />
                             <span>Joined: {formatJoinDate(collab.createdAt)}</span>
                           </div>
                           
