@@ -390,8 +390,8 @@ const ProjectTeam: React.FC = () => {
                         
                         <div className="p-4 space-y-3">
                           {collab.email && (
-                            <div className="text-xs text-muted-foreground flex items-center gap-1">
-                              <Mail className="h-3 w-3" />
+                            <div className="text-sm flex items-center gap-1 mb-3">
+                              <Mail className="h-4 w-4" />
                               <span>{collab.email}</span>
                             </div>
                           )}
