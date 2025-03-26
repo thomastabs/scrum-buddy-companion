@@ -4,7 +4,7 @@ import { useParams } from "react-router-dom";
 import { useProjects } from "@/context/ProjectContext";
 import { useAuth } from "@/context/AuthContext";
 import { fetchProjectCollaborators } from "@/lib/supabase";
-import { Users, Mail, ChevronDown, CheckCircle, Clock, Star, Calendar } from "lucide-react";
+import { Users, Mail, ChevronDown, CheckCircle, Clock, Star, Calendar, Shield, User } from "lucide-react";
 import { Collaborator, Task } from "@/types";
 import { 
   DropdownMenu,
@@ -12,7 +12,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { format } from "date-fns";
+import { Separator } from "@/components/ui/separator";
 
 const ProjectTeam: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -193,7 +197,7 @@ const ProjectTeam: React.FC = () => {
     
     if (userTaskList.length === 0) {
       return (
-        <div className="text-xs text-muted-foreground mt-1">
+        <div className="text-xs text-muted-foreground">
           No tasks assigned
         </div>
       );
@@ -201,7 +205,7 @@ const ProjectTeam: React.FC = () => {
     
     return (
       <DropdownMenu>
-        <DropdownMenuTrigger className="text-xs flex items-center gap-1 hover:text-primary transition-colors mt-1">
+        <DropdownMenuTrigger className="text-xs flex items-center gap-1 hover:text-primary transition-colors">
           <span>View {userTaskList.length} task{userTaskList.length !== 1 ? 's' : ''}</span>
           <ChevronDown className="h-3 w-3" />
         </DropdownMenuTrigger>
@@ -232,23 +236,23 @@ const ProjectTeam: React.FC = () => {
     
     if (contributions.length === 0) {
       return (
-        <div className="text-xs text-muted-foreground mt-1">
+        <div className="text-xs text-muted-foreground">
           No sprint contributions yet
         </div>
       );
     }
     
     return (
-      <div className="mt-2">
-        <div className="text-xs font-medium text-muted-foreground flex items-center gap-1 mb-1">
+      <div>
+        <div className="text-xs font-medium text-muted-foreground flex items-center gap-1">
           <Calendar className="h-3 w-3" />
           <span>Sprint Contributions:</span>
         </div>
         <div className="flex flex-wrap gap-1 mt-1">
           {contributions.map((sprint, index) => (
-            <span key={index} className="text-xs px-2 py-0.5 bg-accent rounded-full">
+            <Badge key={index} variant="outline" className="text-xs bg-accent/50">
               {sprint}
-            </span>
+            </Badge>
           ))}
         </div>
       </div>
@@ -259,30 +263,26 @@ const ProjectTeam: React.FC = () => {
     const stats = userStats[username];
     
     if (!stats) {
-      console.log(`No stats available for user ${username}`);
       return null;
     }
     
     return (
-      <div className="flex flex-col gap-1 mt-2 text-xs">
+      <div className="space-y-2">
         <div className="grid grid-cols-2 gap-2">
-          <div className="flex items-center gap-1 text-muted-foreground">
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
             <Clock className="h-3 w-3" />
             <span>Active: {stats.assignedTasks}</span>
           </div>
-          <div className="flex items-center gap-1 text-muted-foreground">
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
             <CheckCircle className="h-3 w-3" />
             <span>Completed: {stats.completedTasks}</span>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-2">
-          <div className="flex items-center gap-1 text-muted-foreground">
-            <Star className="h-3 w-3" />
-            <span>Points: {stats.completedStoryPoints} / {stats.totalStoryPoints}</span>
-          </div>
+        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <Star className="h-3 w-3" />
+          <span>Points: {stats.completedStoryPoints} / {stats.totalStoryPoints}</span>
         </div>
         {renderTaskDropdown(username)}
-        {renderSprintContributions(username)}
       </div>
     );
   };
@@ -299,65 +299,127 @@ const ProjectTeam: React.FC = () => {
     <div>
       <h2 className="text-2xl font-bold mb-6">Team</h2>
       
-      <div className="space-y-4">
+      <div className="space-y-6">
+        {/* Project Owner Card */}
         <div className="scrum-card p-6">
-          <h3 className="text-lg font-semibold mb-4">Project Owner</h3>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <Shield className="h-5 w-5 text-amber-500" />
+            Project Owner
+          </h3>
+          
           {owner ? (
-            <div className="flex items-center gap-3 p-3 bg-background rounded-md border border-border">
-              <div className="h-10 w-10 bg-accent/20 rounded-full flex items-center justify-center">
-                <span className="text-lg font-semibold">{owner.username.charAt(0).toUpperCase()}</span>
-              </div>
-              <div className="flex-1">
-                <div className="font-medium">{owner.username}</div>
-                {owner.email && (
-                  <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                    <Mail className="h-3 w-3" />
-                    <span>{owner.email}</span>
+            <Card className="bg-gradient-to-r from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/20 border-amber-200 dark:border-amber-800/30 overflow-hidden shadow-sm">
+              <CardContent className="p-0">
+                <div className="flex flex-col md:flex-row">
+                  <div className="p-6 flex flex-col items-center justify-center bg-amber-100/50 dark:bg-amber-900/10 min-w-[150px]">
+                    <Avatar className="h-16 w-16 bg-amber-200 dark:bg-amber-700 text-amber-700 dark:text-amber-200 mb-2">
+                      <AvatarFallback className="text-xl">
+                        {owner.username.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <h4 className="font-semibold text-center">{owner.username}</h4>
+                    <Badge className="mt-2 bg-amber-200 text-amber-800 dark:bg-amber-800 dark:text-amber-200 hover:bg-amber-300 dark:hover:bg-amber-700">
+                      Owner
+                    </Badge>
                   </div>
-                )}
-                <div className="text-xs px-2 py-1 rounded-full inline-block bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 mt-1">
-                  Owner
+                  
+                  <div className="flex-1 p-6">
+                    {owner.email && (
+                      <div className="text-sm text-muted-foreground flex items-center gap-1 mb-3">
+                        <Mail className="h-4 w-4" />
+                        <span>{owner.email}</span>
+                      </div>
+                    )}
+                    
+                    <Separator className="my-3" />
+                    
+                    <div className="space-y-4">
+                      {renderUserStats(owner.username)}
+                      {renderSprintContributions(owner.username)}
+                    </div>
+                  </div>
                 </div>
-                {renderUserStats(owner.username)}
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           ) : (
             <div className="text-muted-foreground">Owner information not available</div>
           )}
         </div>
         
+        {/* Team Members Cards */}
         <div className="scrum-card p-6">
-          <h3 className="text-lg font-semibold mb-4">Team Members</h3>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <Users className="h-5 w-5 text-indigo-500" />
+            Team Members
+          </h3>
+          
           {collaborators.length > 0 ? (
-            <div className="space-y-3">
-              {collaborators.map(collab => (
-                <div key={collab.id} className="flex items-center gap-3 p-3 bg-background rounded-md border border-border">
-                  <div className="h-10 w-10 bg-accent/20 rounded-full flex items-center justify-center">
-                    <span className="text-lg font-semibold">{collab.username.charAt(0).toUpperCase()}</span>
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-medium">{collab.username}</div>
-                    {collab.email && (
-                      <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                        <Mail className="h-3 w-3" />
-                        <span>{collab.email}</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {collaborators.map(collab => {
+                // Determine background gradient based on role
+                let cardStyle = "";
+                if (collab.role === 'scrum_master') {
+                  cardStyle = "bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200 dark:border-blue-800/30";
+                } else if (collab.role === 'product_owner') {
+                  cardStyle = "bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border-green-200 dark:border-green-800/30";
+                } else {
+                  cardStyle = "bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border-purple-200 dark:border-purple-800/30";
+                }
+                
+                // Determine avatar color based on role
+                let avatarStyle = "";
+                if (collab.role === 'scrum_master') {
+                  avatarStyle = "bg-blue-200 dark:bg-blue-700 text-blue-700 dark:text-blue-200";
+                } else if (collab.role === 'product_owner') {
+                  avatarStyle = "bg-green-200 dark:bg-green-700 text-green-700 dark:text-green-200";
+                } else {
+                  avatarStyle = "bg-purple-200 dark:bg-purple-700 text-purple-700 dark:text-purple-200";
+                }
+                
+                return (
+                  <Card key={collab.id} className={`${cardStyle} overflow-hidden shadow-sm hover:shadow-md transition-shadow`}>
+                    <CardContent className="p-0">
+                      <div className="p-4 flex items-center gap-3 border-b border-border/50">
+                        <Avatar className={`h-12 w-12 ${avatarStyle}`}>
+                          <AvatarFallback className="text-lg">
+                            {collab.username.charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        
+                        <div className="flex-1 overflow-hidden">
+                          <h4 className="font-semibold truncate">{collab.username}</h4>
+                          <div className="flex items-center flex-wrap gap-2">
+                            <Badge className={`text-xs ${getRoleBadgeClass(collab.role)}`}>
+                              {collab.role === 'scrum_master' ? 'Scrum Master' : 
+                               collab.role === 'product_owner' ? 'Product Owner' : 
+                               'Team Member'}
+                            </Badge>
+                          </div>
+                        </div>
                       </div>
-                    )}
-                    <div className="flex items-center flex-wrap gap-2">
-                      <div className={`text-xs px-2 py-1 rounded-full inline-block ${getRoleBadgeClass(collab.role)} mt-1`}>
-                        {collab.role === 'scrum_master' ? 'Scrum Master' : 
-                         collab.role === 'product_owner' ? 'Product Owner' : 
-                         'Team Member'}
+                      
+                      <div className="p-4 space-y-3">
+                        {collab.email && (
+                          <div className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Mail className="h-3 w-3" />
+                            <span>{collab.email}</span>
+                          </div>
+                        )}
+                        
+                        <div className="text-xs text-muted-foreground flex items-center gap-1">
+                          <User className="h-3 w-3" />
+                          <span>Joined: {formatJoinDate(collab.createdAt)}</span>
+                        </div>
+                        
+                        <Separator className="my-2" />
+                        
+                        {renderUserStats(collab.username)}
+                        {renderSprintContributions(collab.username)}
                       </div>
-                      <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                        <Users className="h-3 w-3" />
-                        <span>Joined: {formatJoinDate(collab.createdAt)}</span>
-                      </div>
-                    </div>
-                    {renderUserStats(collab.username)}
-                  </div>
-                </div>
-              ))}
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           ) : (
             <div className="text-muted-foreground">No team members yet</div>
