@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useProjects } from "@/context/ProjectContext";
 import { useAuth } from "@/context/AuthContext";
 import { fetchProjectCollaborators } from "@/lib/supabase";
-import { Users, Mail, ChevronDown, CheckCircle, Clock, Star } from "lucide-react";
+import { Users, Mail, ChevronDown, CheckCircle, Clock, Star, Calendar } from "lucide-react";
 import { Collaborator, Task } from "@/types";
 import { 
   DropdownMenu,
@@ -11,6 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { format } from "date-fns";
 
 const ProjectTeam: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -26,6 +28,7 @@ const ProjectTeam: React.FC = () => {
     totalStoryPoints: number,
     completedStoryPoints: number
   }>>({});
+  const [userSprintContributions, setUserSprintContributions] = useState<Record<string, string[]>>({});
   
   const project = getProject(projectId || "");
   
@@ -87,6 +90,7 @@ const ProjectTeam: React.FC = () => {
       totalStoryPoints: number,
       completedStoryPoints: number
     }> = {};
+    const sprintsByUser: Record<string, string[]> = {};
     
     // Initialize stats for owner if available
     if (owner) {
@@ -97,6 +101,7 @@ const ProjectTeam: React.FC = () => {
         totalStoryPoints: 0,
         completedStoryPoints: 0
       };
+      sprintsByUser[owner.username] = [];
     }
     
     // Initialize stats for all collaborators using username instead of userId
@@ -108,6 +113,7 @@ const ProjectTeam: React.FC = () => {
         totalStoryPoints: 0,
         completedStoryPoints: 0
       };
+      sprintsByUser[collab.username] = [];
     });
     
     // Process all tasks - Use usernames for keys instead of IDs
@@ -126,6 +132,7 @@ const ProjectTeam: React.FC = () => {
           totalStoryPoints: 0,
           completedStoryPoints: 0
         };
+        sprintsByUser[task.assignedTo] = [];
       }
       
       // Add task to user's task list
@@ -134,6 +141,14 @@ const ProjectTeam: React.FC = () => {
       // Update stats
       const storyPoints = task.storyPoints || 0;
       statsByUser[task.assignedTo].totalStoryPoints += storyPoints;
+      
+      // Track which sprints this user contributed to
+      if (task.sprintId) {
+        const sprint = projectSprints.find(s => s.id === task.sprintId);
+        if (sprint && !sprintsByUser[task.assignedTo].includes(sprint.title)) {
+          sprintsByUser[task.assignedTo].push(sprint.title);
+        }
+      }
       
       if (task.status === 'done') {
         statsByUser[task.assignedTo].completedTasks++;
@@ -145,9 +160,11 @@ const ProjectTeam: React.FC = () => {
     
     console.log("Task mapping by user:", Object.keys(tasksByUser).map(id => `${id}: ${tasksByUser[id].length} tasks`));
     console.log("Stats by user:", statsByUser);
+    console.log("Sprint contributions by user:", sprintsByUser);
     
     setUserTasks(tasksByUser);
     setUserStats(statsByUser);
+    setUserSprintContributions(sprintsByUser);
   }, [projectId, tasks, collaborators, owner, getSprintsByProject]);
   
   if (isLoading) {
@@ -209,6 +226,34 @@ const ProjectTeam: React.FC = () => {
       </DropdownMenu>
     );
   };
+
+  const renderSprintContributions = (username: string) => {
+    const contributions = userSprintContributions[username] || [];
+    
+    if (contributions.length === 0) {
+      return (
+        <div className="text-xs text-muted-foreground mt-1">
+          No sprint contributions yet
+        </div>
+      );
+    }
+    
+    return (
+      <div className="mt-2">
+        <div className="text-xs font-medium text-muted-foreground flex items-center gap-1 mb-1">
+          <Calendar className="h-3 w-3" />
+          <span>Sprint Contributions:</span>
+        </div>
+        <div className="flex flex-wrap gap-1 mt-1">
+          {contributions.map((sprint, index) => (
+            <span key={index} className="text-xs px-2 py-0.5 bg-accent rounded-full">
+              {sprint}
+            </span>
+          ))}
+        </div>
+      </div>
+    );
+  };
   
   const renderUserStats = (username: string) => {
     const stats = userStats[username];
@@ -237,8 +282,17 @@ const ProjectTeam: React.FC = () => {
           </div>
         </div>
         {renderTaskDropdown(username)}
+        {renderSprintContributions(username)}
       </div>
     );
+  };
+
+  const formatJoinDate = (date: string) => {
+    try {
+      return format(new Date(date), 'MMM d, yyyy');
+    } catch (error) {
+      return 'Unknown date';
+    }
   };
   
   return (
@@ -289,10 +343,16 @@ const ProjectTeam: React.FC = () => {
                         <span>{collab.email}</span>
                       </div>
                     )}
-                    <div className={`text-xs px-2 py-1 rounded-full inline-block ${getRoleBadgeClass(collab.role)} mt-1`}>
-                      {collab.role === 'scrum_master' ? 'Scrum Master' : 
-                       collab.role === 'product_owner' ? 'Product Owner' : 
-                       'Team Member'}
+                    <div className="flex items-center flex-wrap gap-2">
+                      <div className={`text-xs px-2 py-1 rounded-full inline-block ${getRoleBadgeClass(collab.role)} mt-1`}>
+                        {collab.role === 'scrum_master' ? 'Scrum Master' : 
+                         collab.role === 'product_owner' ? 'Product Owner' : 
+                         'Team Member'}
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                        <Users className="h-3 w-3" />
+                        <span>Joined: {formatJoinDate(collab.createdAt)}</span>
+                      </div>
                     </div>
                     {renderUserStats(collab.username)}
                   </div>
