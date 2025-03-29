@@ -39,13 +39,26 @@ const BurndownChart: React.FC = () => {
   const loadingTimeoutRef = useRef<number | null>(null);
   
   const project = getProject(projectId || "");
+  const projectSprints = projectId ? getSprintsByProject(projectId) : [];
   
+  // Load data only if we have sprints
   useEffect(() => {
-    if (!projectId || !user || dataFetchedRef.current) return;
+    if (!projectId || !user) return;
     
     const loadBurndownData = async () => {
       setIsLoading(true);
+      dataFetchedRef.current = false;
+      
       try {
+        // Check if there are any sprints before loading data
+        const availableSprints = getSprintsByProject(projectId);
+        
+        if (availableSprints.length === 0) {
+          setIsLoading(false);
+          dataFetchedRef.current = true;
+          return;
+        }
+        
         const existingData = await fetchBurndownData(projectId, user.id);
         
         if (existingData && existingData.length > 0) {
@@ -59,7 +72,11 @@ const BurndownChart: React.FC = () => {
         }
       } catch (error) {
         console.error("Error loading burndown data:", error);
-        await generateAndSaveBurndownData();
+        // Only try to generate data if we have sprints
+        const availableSprints = getSprintsByProject(projectId);
+        if (availableSprints.length > 0) {
+          await generateAndSaveBurndownData();
+        }
       } finally {
         // Use a timeout to prevent the loading indicator from flickering
         if (loadingTimeoutRef.current) window.clearTimeout(loadingTimeoutRef.current);
@@ -77,12 +94,15 @@ const BurndownChart: React.FC = () => {
         window.clearTimeout(loadingTimeoutRef.current);
       }
     };
-  }, [projectId, user]);
+  }, [projectId, user, getSprintsByProject]);
   
   useEffect(() => {
     if (!projectId || !user || isLoading || !dataFetchedRef.current) return;
     
+    // Don't update if there are no sprints
     const projectSprints = getSprintsByProject(projectId);
+    if (projectSprints.length === 0) return;
+    
     const currentTasksCount = tasks.filter(t => t.projectId === projectId).length;
     const currentSprintsCount = projectSprints.length;
     
@@ -107,7 +127,7 @@ const BurndownChart: React.FC = () => {
       
       updateBurndownData();
     }
-  }, [tasks, sprints, projectId, user, isLoading, lastTasksLength, lastSprintsLength, isUpdating]);
+  }, [tasks, sprints, projectId, user, isLoading, lastTasksLength, lastSprintsLength, isUpdating, getSprintsByProject]);
   
   const generateAndSaveBurndownData = async () => {
     try {
@@ -135,8 +155,9 @@ const BurndownChart: React.FC = () => {
     
     const projectSprints = getSprintsByProject(projectId || "");
     
+    // Return empty data if no sprints exist
     if (projectSprints.length === 0) {
-      return generateDefaultTimeframe(today, 21);
+      return [];
     }
     
     let earliestStartDate: Date | null = null;
@@ -156,7 +177,7 @@ const BurndownChart: React.FC = () => {
     }
     
     if (!earliestStartDate || !latestEndDate) {
-      return generateDefaultTimeframe(today, 21);
+      return [];
     }
     
     const daysInProject = differenceInDays(latestEndDate, earliestStartDate) + 1;
@@ -166,7 +187,7 @@ const BurndownChart: React.FC = () => {
     const totalStoryPoints = calculateTotalStoryPoints(projectSprints);
     
     if (totalStoryPoints === 0) {
-      return generateDefaultTimeframe(today, timeframeDays);
+      return [];
     }
     
     // Group completed sprints by end date
@@ -193,7 +214,7 @@ const BurndownChart: React.FC = () => {
             // Reduce the remaining points by the total story points in this sprint
             const sprintTasks = getTasksBySprint(sprint.id);
             const sprintPoints = sprintTasks.reduce((sum, task) => {
-              return sum + (task.storyPoints || task.story_points || 0);
+              return sum + (task.storyPoints || 0);
             }, 0);
             
             remainingPoints = Math.max(0, remainingPoints - sprintPoints);
@@ -220,7 +241,7 @@ const BurndownChart: React.FC = () => {
     for (const sprint of sprints) {
       const sprintTasks = getTasksBySprint(sprint.id);
       totalPoints += sprintTasks.reduce((sum, task) => {
-        return sum + (task.storyPoints || task.story_points || 0);
+        return sum + (task.storyPoints || 0);
       }, 0);
     }
     
@@ -238,37 +259,14 @@ const BurndownChart: React.FC = () => {
           sprintsByEndDate.set(endDateStr, []);
         }
         
-        sprintsByEndDate.get(endDateStr)?.push(sprint);
+        const sprints = sprintsByEndDate.get(endDateStr);
+        if (sprints) {
+          sprints.push(sprint);
+        }
       }
     }
     
     return sprintsByEndDate;
-  };
-  
-  const generateDefaultTimeframe = (startDate: Date, days: number): BurndownDataPoint[] => {
-    const data: BurndownDataPoint[] = [];
-    const totalPoints = 100;
-    const pointsPerDay = totalPoints / days;
-    const today = startOfDay(new Date());
-    
-    for (let i = 0; i < days; i++) {
-      const date = addDays(startDate, i - Math.floor(days / 3));
-      const dateStr = date.toISOString().split('T')[0];
-      const idealRemaining = Math.max(0, totalPoints - (i * pointsPerDay));
-      
-      const actual = isBefore(date, today) || isToday(date) 
-        ? Math.round(idealRemaining * (0.8 + Math.random() * 0.4))
-        : null;
-      
-      data.push({
-        date: dateStr,
-        ideal: Math.round(idealRemaining),
-        actual: actual,
-        formattedDate: format(date, "MMM dd"),
-      });
-    }
-    
-    return data;
   };
   
   if (isLoading) {
@@ -282,9 +280,33 @@ const BurndownChart: React.FC = () => {
     );
   }
   
+  // Check if there are sprints after loading
+  if (projectSprints.length === 0) {
+    return (
+      <div className="text-center py-12 bg-scrum-card border border-scrum-border rounded-lg">
+        <h2 className="text-xl font-bold mb-4">Project Burndown Chart</h2>
+        <p className="text-scrum-text-secondary mb-4">
+          No sprints available. Create sprints to view the burndown chart.
+        </p>
+      </div>
+    );
+  }
+  
+  // If we have sprints but no chart data, show a message
+  if (chartData.length === 0) {
+    return (
+      <div className="text-center py-12 bg-scrum-card border border-scrum-border rounded-lg">
+        <h2 className="text-xl font-bold mb-4">Project Burndown Chart</h2>
+        <p className="text-scrum-text-secondary mb-4">
+          Unable to generate burndown chart. Make sure your sprints have tasks with story points.
+        </p>
+      </div>
+    );
+  }
+  
   const todayStr = new Date().toISOString().split('T')[0];
   const todayIndex = chartData.findIndex(d => d.date === todayStr);
-  const todayLabel = todayIndex >= 0 ? chartData[todayIndex]?.formattedDate : format(new Date(), "MMM dd");
+  const todayLabel = todayIndex >= 0 && chartData[todayIndex] ? chartData[todayIndex].formattedDate : format(new Date(), "MMM dd");
   
   const lastActualIndex = chartData.reduce((lastIdx, point, idx) => {
     return point.actual !== null ? idx : lastIdx;
@@ -360,19 +382,21 @@ const BurndownChart: React.FC = () => {
             <Legend
               wrapperStyle={{ color: "inherit" }}
             />
-            <ReferenceLine 
-              x={todayLabel} 
-              stroke="hsl(var(--scrum-chart-reference))" 
-              strokeWidth={2}
-              strokeDasharray="5 3" 
-              label={{ 
-                value: "TODAY", 
-                position: "top", 
-                fill: "hsl(var(--scrum-chart-reference))",
-                fontSize: 12,
-                fontWeight: "bold"
-              }} 
-            />
+            {todayLabel && (
+              <ReferenceLine 
+                x={todayLabel} 
+                stroke="hsl(var(--scrum-chart-reference))" 
+                strokeWidth={2}
+                strokeDasharray="5 3" 
+                label={{ 
+                  value: "TODAY", 
+                  position: "top", 
+                  fill: "hsl(var(--scrum-chart-reference))",
+                  fontSize: 12,
+                  fontWeight: "bold"
+                }} 
+              />
+            )}
             <Line
               type="monotone"
               dataKey="ideal"

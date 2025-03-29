@@ -262,6 +262,7 @@ export const fetchCollaborativeProjects = async (userId: string) => {
         updatedAt: project.updated_at,
         ownerId: project.owner_id,
         ownerName: project.owner ? project.owner.username || '' : '',
+        ownerEmail: project.owner ? project.owner.email || '' : '',
         isCollaboration: true,
         role: item.role
       };
@@ -479,6 +480,82 @@ export const updateTaskWithCompletionDate = async (taskId: string, data: {
   } catch (error) {
     console.error('Error updating task with completion date:', error);
     throw error;
+  }
+};
+
+// Add this optimized helper function for fetching task data with a single call
+export const fetchTaskWithDetails = async (taskId: string) => {
+  try {
+    return await withRetry(async () => {
+      const { data, error } = await supabase
+        .from('tasks')
+        .select(`
+          *,
+          project:project_id (
+            id,
+            title, 
+            owner_id
+          )
+        `)
+        .eq('id', taskId)
+        .single();
+        
+      if (error) throw error;
+      return data;
+    });
+  } catch (error) {
+    console.error('Error fetching task with details:', error);
+    throw error;
+  }
+};
+
+// Helper function to fetch collaborators for a project with optimized query
+export const fetchProjectCollaboratorsOptimized = async (projectId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('collaborators')
+      .select(`
+        id,
+        role,
+        created_at,
+        user_id,
+        users:user_id (id, username, email),
+        project:project_id (
+          id,
+          owner:owner_id (id, username, email)
+        )
+      `)
+      .eq('project_id', projectId);
+      
+    if (error) throw error;
+    
+    // Get owner info from the first result (all rows will have the same project data)
+    let owner = null;
+    if (data && data.length > 0 && data[0].project) {
+      const projectData = data[0].project as any;
+      if (projectData && projectData.owner) {
+        owner = {
+          id: projectData.owner.id,
+          username: projectData.owner.username,
+          email: projectData.owner.email
+        };
+      }
+    }
+    
+    // Transform the data to match our Collaborator type
+    const collaborators: Collaborator[] = (data || []).map(item => ({
+      id: item.id,
+      userId: item.user_id,
+      username: item.users ? (item.users as any).username || '' : '',
+      email: item.users ? (item.users as any).email || '' : '',
+      role: item.role,
+      createdAt: item.created_at
+    }));
+    
+    return { collaborators, owner };
+  } catch (error) {
+    console.error('Error fetching collaborators:', error);
+    return { collaborators: [], owner: null };
   }
 };
 

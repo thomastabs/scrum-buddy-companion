@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useProjects } from "@/context/ProjectContext";
 import { useAuth } from "@/context/AuthContext";
-import { fetchProjectCollaborators } from "@/lib/supabase";
+import { fetchProjectCollaboratorsOptimized } from "@/lib/supabase";
 import { Users, Mail, ChevronDown, CheckCircle, Clock, Star, Calendar, Shield, User } from "lucide-react";
 import { Collaborator, Task } from "@/types";
 import { 
@@ -24,7 +23,7 @@ const ProjectTeam: React.FC = () => {
   const { user } = useAuth();
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [owner, setOwner] = useState<{id: string, username: string, email?: string} | null>(null);
+  const [owner, setOwner] = useState<{id: string, username: string, email: string} | null>(null);
   const [userTasks, setUserTasks] = useState<Record<string, Task[]>>({});
   const [userStats, setUserStats] = useState<Record<string, {
     assignedTasks: number,
@@ -42,16 +41,19 @@ const ProjectTeam: React.FC = () => {
       
       setIsLoading(true);
       try {
-        // Get collaborators
-        const collaboratorsData = await fetchProjectCollaborators(projectId);
+        // Get collaborators and owner using the optimized function
+        const { collaborators: collaboratorsData, owner: ownerData } = await fetchProjectCollaboratorsOptimized(projectId);
         setCollaborators(collaboratorsData);
         
-        // Set owner data if available from project
-        if (project?.ownerId && project?.ownerName) {
+        // Set owner data from the optimized fetch
+        if (ownerData) {
+          setOwner(ownerData);
+        } else if (project?.ownerId && project?.ownerName) {
+          // Fallback to project context data if available
           setOwner({
             id: project.ownerId,
             username: project.ownerName,
-            email: project.ownerEmail
+            email: project.ownerEmail || "No email available"
           });
         }
       } catch (error) {
@@ -71,6 +73,7 @@ const ProjectTeam: React.FC = () => {
     console.log("Available tasks:", tasks.length);
     console.log("Available collaborators:", collaborators.length);
     console.log("Owner:", owner);
+    console.log(`Owner Email: ${owner?.email}`);
     
     const projectSprints = getSprintsByProject(projectId);
     console.log("Project sprints:", projectSprints.length);
@@ -312,12 +315,10 @@ const ProjectTeam: React.FC = () => {
                   </div>
                   
                   <div className="flex-1 p-6">
-                    {owner.email && (
-                      <div className="text-sm flex items-center gap-1 mb-3">
-                        <Mail className="h-4 w-4" />
-                        <span>{owner.email}</span>
-                      </div>
-                    )}
+                    <div className="text-sm flex items-center gap-1 mb-3">
+                      <Mail className="h-4 w-4" />
+                      <span>{owner.email}</span>
+                    </div>
                     
                     <Separator className="my-3" />
                     
