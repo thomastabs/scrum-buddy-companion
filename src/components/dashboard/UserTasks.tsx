@@ -6,6 +6,17 @@ import { ArrowRight, Clock } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { Link } from "react-router-dom";
+import { Skeleton } from "@/components/ui/skeleton";
+
+interface Project {
+  id: string;
+  title: string;
+}
+
+interface Sprint {
+  id: string;
+  title: string;
+}
 
 interface Task {
   id: string;
@@ -13,14 +24,8 @@ interface Task {
   status: string;
   priority: string;
   storyPoints: number;
-  project: {
-    id: string;
-    title: string;
-  };
-  sprint: {
-    id: string;
-    title: string;
-  } | null;
+  project: Project;
+  sprint: Sprint | null;
 }
 
 const UserTasks: React.FC = () => {
@@ -95,7 +100,14 @@ const UserTasks: React.FC = () => {
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <div className="py-4 text-center text-scrum-text-secondary">Loading tasks...</div>
+          <div className="space-y-4">
+            {[1, 2, 3].map(index => (
+              <div key={index} className="flex items-center justify-between p-3 border rounded-md">
+                <Skeleton className="h-8 w-3/4" />
+                <Skeleton className="h-6 w-16" />
+              </div>
+            ))}
+          </div>
         ) : tasks.length === 0 ? (
           <div className="py-4 text-center text-scrum-text-secondary">
             You don't have any in-progress tasks
@@ -110,7 +122,7 @@ const UserTasks: React.FC = () => {
                     <Badge variant="outline" className={`${getPriorityColor(task.priority)} text-white`}>
                       {task.priority}
                     </Badge>
-                    {task.storyPoints && (
+                    {task.storyPoints > 0 && (
                       <Badge variant="outline">
                         {task.storyPoints} {task.storyPoints === 1 ? 'point' : 'points'}
                       </Badge>
