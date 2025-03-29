@@ -57,8 +57,8 @@ const UserTasks: React.FC = () => {
           priority: task.priority,
           storyPoints: task.story_points,
           project: {
-            id: task.project ? task.project.id : '',
-            title: task.project ? task.project.title : ''
+            id: task.project?.id || '',
+            title: task.project?.title || ''
           },
           sprint: task.sprint ? {
             id: task.sprint.id,
