@@ -55,21 +55,23 @@ const UserTasks: React.FC = () => {
         if (error) throw error;
         
         // Transform the data to match our Task interface
-        const formattedTasks: Task[] = (data || []).map(task => ({
-          id: task.id,
-          title: task.title,
-          status: task.status,
-          priority: task.priority,
-          storyPoints: task.story_points,
-          project: {
-            id: task.project?.id || '',
-            title: task.project?.title || ''
-          },
-          sprint: task.sprint ? {
-            id: task.sprint.id,
-            title: task.sprint.title
-          } : null
-        }));
+        const formattedTasks: Task[] = (data || []).map(task => {
+          return {
+            id: task.id,
+            title: task.title,
+            status: task.status,
+            priority: task.priority,
+            storyPoints: task.story_points,
+            project: {
+              id: task.project?.id || '',
+              title: task.project?.title || ''
+            },
+            sprint: task.sprint ? {
+              id: task.sprint.id,
+              title: task.sprint.title
+            } : null
+          };
+        });
         
         setTasks(formattedTasks);
       } catch (error) {
