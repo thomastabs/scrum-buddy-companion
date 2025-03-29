@@ -7,6 +7,7 @@ import { supabase, withRetry } from "@/lib/supabase";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface TaskWithProject {
   id: string;
@@ -54,7 +55,7 @@ const UserTasks: React.FC = () => {
         if (error) throw error;
         
         // Transform the data to match our TaskWithProject interface
-        const transformedTasks = data.map((task: any) => ({
+        const transformedTasks = Array.isArray(data) ? data.map((task) => ({
           id: task.id,
           title: task.title,
           project_id: task.project_id,
@@ -63,7 +64,7 @@ const UserTasks: React.FC = () => {
           sprint_id: task.sprint_id,
           story_points: task.story_points,
           priority: task.priority
-        }));
+        })) : [];
         
         setTasks(transformedTasks);
       } catch (error) {
@@ -114,6 +115,22 @@ const UserTasks: React.FC = () => {
     }
   };
 
+  // Skeleton loading component for tasks table
+  const TasksSkeleton = () => (
+    <div className="space-y-2">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="flex items-center space-x-4 py-3">
+          <Skeleton className="h-5 w-2/5" />
+          <Skeleton className="h-5 w-1/5" />
+          <Skeleton className="h-5 w-16 rounded-full" />
+          <Skeleton className="h-5 w-16 rounded-full" />
+          <Skeleton className="h-5 w-6" />
+          <Skeleton className="h-5 w-5 rounded-full" />
+        </div>
+      ))}
+    </div>
+  );
+
   return (
     <Card className="mt-4">
       <CardHeader className="pb-2">
@@ -124,8 +141,8 @@ const UserTasks: React.FC = () => {
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <div className="h-32 flex items-center justify-center">
-            <p className="text-sm text-gray-500 animate-pulse">Loading tasks...</p>
+          <div className="space-y-3">
+            <TasksSkeleton />
           </div>
         ) : tasks.length > 0 ? (
           <Table>

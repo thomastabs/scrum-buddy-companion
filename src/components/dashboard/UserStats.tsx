@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, Award } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface StatsData {
   completedTasks: number;
@@ -57,12 +58,21 @@ const UserStats: React.FC = () => {
           <CheckCircle className="h-4 w-4 text-scrum-accent" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">
-            {isLoading ? "..." : stats.completedTasks}
-          </div>
-          <p className="text-xs text-scrum-text-secondary">
-            Tasks marked as done across all projects
-          </p>
+          {isLoading ? (
+            <div className="space-y-2">
+              <Skeleton className="h-8 w-16" />
+              <Skeleton className="h-4 w-48" />
+            </div>
+          ) : (
+            <>
+              <div className="text-2xl font-bold">
+                {stats.completedTasks}
+              </div>
+              <p className="text-xs text-scrum-text-secondary">
+                Tasks marked as done across all projects
+              </p>
+            </>
+          )}
         </CardContent>
       </Card>
       
@@ -72,12 +82,21 @@ const UserStats: React.FC = () => {
           <Award className="h-4 w-4 text-scrum-accent" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">
-            {isLoading ? "..." : stats.storyPoints}
-          </div>
-          <p className="text-xs text-scrum-text-secondary">
-            Total points from completed tasks
-          </p>
+          {isLoading ? (
+            <div className="space-y-2">
+              <Skeleton className="h-8 w-16" />
+              <Skeleton className="h-4 w-48" />
+            </div>
+          ) : (
+            <>
+              <div className="text-2xl font-bold">
+                {stats.storyPoints}
+              </div>
+              <p className="text-xs text-scrum-text-secondary">
+                Total points from completed tasks
+              </p>
+            </>
+          )}
         </CardContent>
       </Card>
     </div>
