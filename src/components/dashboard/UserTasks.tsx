@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Clock, ArrowUpRight } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,9 +10,14 @@ import { useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Task } from "@/types";
 
+// Define an extended Task interface that includes projectTitle
+interface ExtendedTask extends Task {
+  projectTitle?: string;
+}
+
 const UserTasks: React.FC = () => {
   const { user } = useAuth();
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasks, setTasks] = useState<ExtendedTask[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -43,7 +49,7 @@ const UserTasks: React.FC = () => {
         if (error) throw error;
         
         // Safely transform the data
-        const transformedTasks: Task[] = (data || []).map((task: any) => ({
+        const transformedTasks: ExtendedTask[] = (data || []).map((task: any) => ({
           id: task.id,
           title: task.title,
           projectId: task.project_id,
