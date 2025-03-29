@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Clock, ArrowUpRight } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,21 +7,11 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
-
-interface TaskWithProject {
-  id: string;
-  title: string;
-  project_id: string;
-  project_title: string;
-  status: string;
-  sprint_id: string | null;
-  story_points: number | null;
-  priority: string | null;
-}
+import { Task } from "@/types";
 
 const UserTasks: React.FC = () => {
   const { user } = useAuth();
-  const [tasks, setTasks] = useState<TaskWithProject[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -33,7 +22,6 @@ const UserTasks: React.FC = () => {
       try {
         setIsLoading(true);
         
-        // Fetch in-progress tasks assigned to the user
         const { data, error } = await withRetry(async () => {
           return await supabase
             .from('tasks')
@@ -54,17 +42,21 @@ const UserTasks: React.FC = () => {
         
         if (error) throw error;
         
-        // Transform the data to match our TaskWithProject interface
-        const transformedTasks = Array.isArray(data) ? data.map((task) => ({
+        // Safely transform the data
+        const transformedTasks: Task[] = (data || []).map((task: any) => ({
           id: task.id,
           title: task.title,
-          project_id: task.project_id,
-          project_title: task.projects?.title || 'Unknown Project',
+          projectId: task.project_id,
+          projectTitle: task.projects?.title || 'Unknown Project',
           status: task.status,
-          sprint_id: task.sprint_id,
-          story_points: task.story_points,
-          priority: task.priority
-        })) : [];
+          sprintId: task.sprint_id,
+          storyPoints: task.story_points,
+          priority: task.priority as Task['priority'],
+          description: task.description || '',
+          assignedTo: task.assign_to || '',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        }));
         
         setTasks(transformedTasks);
       } catch (error) {
@@ -115,7 +107,6 @@ const UserTasks: React.FC = () => {
     }
   };
 
-  // Skeleton loading component for tasks table
   const TasksSkeleton = () => (
     <div className="space-y-2">
       {[1, 2, 3].map((i) => (
@@ -161,11 +152,11 @@ const UserTasks: React.FC = () => {
                 <TableRow key={task.id} className="cursor-pointer hover:bg-muted/80">
                   <TableCell 
                     className="font-medium"
-                    onClick={() => navigateToTask(task.project_id, task.sprint_id)}
+                    onClick={() => navigateToTask(task.projectId, task.sprintId)}
                   >
                     {task.title}
                   </TableCell>
-                  <TableCell>{task.project_title}</TableCell>
+                  <TableCell>{task.projectTitle}</TableCell>
                   <TableCell>{getStatusBadge(task.status)}</TableCell>
                   <TableCell>
                     {task.priority ? (
@@ -176,10 +167,10 @@ const UserTasks: React.FC = () => {
                       <span className="text-gray-400 text-sm">-</span>
                     )}
                   </TableCell>
-                  <TableCell>{task.story_points || '-'}</TableCell>
+                  <TableCell>{task.storyPoints || '-'}</TableCell>
                   <TableCell>
                     <button 
-                      onClick={() => navigateToTask(task.project_id, task.sprint_id)}
+                      onClick={() => navigateToTask(task.projectId, task.sprintId)}
                       className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
                     >
                       <ArrowUpRight className="h-4 w-4" />
