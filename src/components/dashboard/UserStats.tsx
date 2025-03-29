@@ -52,7 +52,7 @@ const UserStats: React.FC = () => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <Card className="transition-all duration-300 hover:shadow-lg hover:scale-[1.02] hover:bg-scrum-card/80 border-scrum-accent/10">
+      <Card className="bg-scrum-card border border-scrum-border transition-all duration-300 hover:shadow-lg hover:scale-[1.02] hover:bg-scrum-card/80">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Completed Tasks</CardTitle>
           <CheckCircle className="h-4 w-4 text-scrum-accent" />
@@ -76,7 +76,7 @@ const UserStats: React.FC = () => {
         </CardContent>
       </Card>
       
-      <Card className="transition-all duration-300 hover:shadow-lg hover:scale-[1.02] hover:bg-scrum-card/80 border-scrum-accent/10">
+      <Card className="bg-scrum-card border border-scrum-border transition-all duration-300 hover:shadow-lg hover:scale-[1.02] hover:bg-scrum-card/80">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Story Points</CardTitle>
           <Award className="h-4 w-4 text-scrum-accent" />
